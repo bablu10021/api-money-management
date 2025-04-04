@@ -31,6 +31,10 @@ public class MoneyDetailsService {
 	public Optional<MoneyDetails> getMoneyDetailsById(Long id) {
 		return moneyRepository.findById(id);
 	}
+	
+	public List<MoneyDetails> getMoneyDetails() {
+		return moneyRepository.findAll();
+	}
 
 	public MoneyDetails updateMoneyDetails(Long id, MoneyDetails updatedMoneyDetails) {
 		Optional<MoneyDetails> existingMoneyDetails = moneyRepository.findById(id);

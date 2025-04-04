@@ -3,6 +3,7 @@ package com.springboot.moneyManagement.entity;
 import java.util.Date;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -33,9 +34,11 @@ public class MoneyDetails {
 	private double percentage;
 
 	@Column(name = "start_Date", nullable = false)
+	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
 	private Date startDate;
 
 	@Column(name = "end_Date")
+	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
 	private Date endDate;
 
 	public long getId() {
