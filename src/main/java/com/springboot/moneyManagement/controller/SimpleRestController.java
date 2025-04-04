@@ -76,6 +76,7 @@ public class SimpleRestController {
 				moneyDetailsService.saveMoneyDetails(moneyDetails);
 			}
 		}
+
 		ApiResponse<PeopleDetails> response = new ApiResponse<>(200, "People and Money Details saved successfully",
 				savedPeople);
 		return ResponseEntity.status(HttpStatus.CREATED).body(response);
