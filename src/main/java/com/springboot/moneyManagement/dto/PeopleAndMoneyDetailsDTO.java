@@ -1,6 +1,9 @@
-package com.springboot.moneyManagement.entity;
+package com.springboot.moneyManagement.dto;
 
 import java.util.List;
+
+import com.springboot.moneyManagement.entity.MoneyDetails;
+import com.springboot.moneyManagement.entity.PeopleDetails;
 
 public class PeopleAndMoneyDetailsDTO {
 
