@@ -19,13 +19,14 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.springboot.moneyManagement.entity.MoneyDetails;
 import com.springboot.moneyManagement.dto.MoneyDetailsDTO;
 import com.springboot.moneyManagement.dto.PeopleAndMoneyDetailsDTO;
 import com.springboot.moneyManagement.dto.PeopleDetailsDTO;
+import com.springboot.moneyManagement.entity.MoneyDetails;
 import com.springboot.moneyManagement.entity.PeopleDetails;
 import com.springboot.moneyManagement.response.ApiResponse;
-import com.springboot.moneyManagement.service.MoneyDetailsService;
+import com.springboot.moneyManagement.service.MoneyService;
+import com.springboot.moneyManagement.service.PeopleAndMoneyService;
 import com.springboot.moneyManagement.service.PeopleService;
 
 @Component
@@ -40,60 +41,75 @@ public class SimpleRestController {
 	private final PeopleService peopleService;
 
 	@Autowired
-	private final MoneyDetailsService moneyDetailsService;
+	private final MoneyService moneyService;
 
 	@Autowired
-	public SimpleRestController(PeopleService peopleService, MoneyDetailsService moneyDetailsService) {
-		this.peopleService = peopleService;
-		this.moneyDetailsService = moneyDetailsService;
-	}
-/*
-	@PostMapping("/peopleDetails")
-	public ResponseEntity<ApiResponse<PeopleDetails>> savePeopleDetails(@RequestBody PeopleDetails peopleDetails) {
-		logger.info("Received request to save people details: {}", peopleDetails);
-		logger.info("PeopleDetails Object: " + peopleDetails.toString()); // Added logging
-		PeopleDetails newPeoples = peopleService.savePeopleDetails(peopleDetails);
-		logger.info("Saved people details: {}", newPeoples);
+	private final PeopleAndMoneyService peopleAndMoneyService;
 
-		ApiResponse<PeopleDetails> response = new ApiResponse<>(200, "People Details saved successfully", newPeoples);
-		return ResponseEntity.status(HttpStatus.CREATED).body(response);
+	@Autowired
+	public SimpleRestController(PeopleService peopleService, MoneyService moneyService,
+			PeopleAndMoneyService peopleAndMoneyService) {
+		this.peopleService = peopleService;
+		this.moneyService = moneyService;
+		this.peopleAndMoneyService = peopleAndMoneyService;
 	}
-*/	
 
 	/**
-	 * Used to save people details with money details
+	 * Save people details with money details
+	 * @param dto
+	 * @return
 	 */
 	@PostMapping("/peopleDetailsWithMoney")
 	public ResponseEntity<ApiResponse<PeopleDetails>> savePeopleAndMoneyDetails(
 			@RequestBody PeopleAndMoneyDetailsDTO dto) {
 		logger.info("Received request to save people and money details: {}", dto);
+		return peopleAndMoneyService.savePeopleAndMoneyDetails(dto);
+	}
+	
+	/**
+	 * Update people details and money details
+	 * @param id
+	 * @param dto
+	 * @return
+	 */
+	@PutMapping("updatePeopleMoneyDetails/{id}")
+	public ResponseEntity<ApiResponse<PeopleDetails>> updatePeopleAndMoneyDetails(@PathVariable Long id,
+			@RequestBody PeopleAndMoneyDetailsDTO dto) {
+		return peopleAndMoneyService.updatePeopleAndMoneyDetails(id, dto);
+	}
+	
+	/**
+	 * get- People with Money Details by using- People ID
+	 * 
+	 * @param id
+	 * @return
+	 */
+	@GetMapping("/peopleDetailsWithMoney/{id}")
+	public ResponseEntity<ApiResponse<PeopleDetails>> getPeopleDetailsWithMoney(@PathVariable Long id) {
+		Optional<PeopleDetails> pDetails = peopleAndMoneyService.getPeopleDetailsWithMoney(id);
 
-		PeopleDetails savedPeople = peopleService.savePeopleDetails(dto.getPeopleDetails());
-
-		if (dto.getMoneyDetails() != null && !dto.getMoneyDetails().isEmpty()) {
-			for (MoneyDetails moneyDetails : dto.getMoneyDetails()) {
-				moneyDetails.setPeopleDetails(savedPeople);
-				moneyDetailsService.saveMoneyDetails(moneyDetails);
-			}
+		if (pDetails.isPresent()) {
+			return ResponseEntity.ok(new ApiResponse<>(200, "Success", pDetails.get()));
+		} else {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND)
+					.body(new ApiResponse<>(404, "PeopleDetails not found with ID: " + id, null));
 		}
-
-		ApiResponse<PeopleDetails> response = new ApiResponse<>(200, "People and Money Details saved successfully",
-				savedPeople);
-		return ResponseEntity.status(HttpStatus.CREATED).body(response);
 	}
 
 	/**
 	 * Get all people list
+	 * 
 	 * @return
 	 */
 	@GetMapping("/peopleDetails")
 	public List<PeopleDetailsDTO> getAllPeopleDetails() {
 		List<PeopleDetails> peopleList = peopleService.getAllPeopleDetails();
-	    return peopleList.stream().map(PeopleDetailsDTO::new).toList();
+		return peopleList.stream().map(PeopleDetailsDTO::new).toList();
 	}
 
 	/**
 	 * get only people details based on people id
+	 * 
 	 * @param id
 	 * @return
 	 */
@@ -102,7 +118,7 @@ public class SimpleRestController {
 		Optional<PeopleDetails> pDetails = peopleService.getPeopleDetailsById(id);
 
 		if (pDetails.isPresent()) {
-	        PeopleDetailsDTO responseDTO = new PeopleDetailsDTO(pDetails.get());
+			PeopleDetailsDTO responseDTO = new PeopleDetailsDTO(pDetails.get());
 			return ResponseEntity.ok(new ApiResponse<>(200, "Success", responseDTO));
 		}
 		return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -112,6 +128,7 @@ public class SimpleRestController {
 
 	/**
 	 * get only people details based on people name
+	 * 
 	 * @param firstName
 	 * @return
 	 */
@@ -120,69 +137,23 @@ public class SimpleRestController {
 		Optional<PeopleDetails> pDetails = peopleService.getPeopleDetailsByfirstName(firstName);
 
 		if (pDetails.isPresent()) {
-			 PeopleDetailsDTO responseDTO = new PeopleDetailsDTO(pDetails.get());
+			PeopleDetailsDTO responseDTO = new PeopleDetailsDTO(pDetails.get());
 			return ResponseEntity.ok(new ApiResponse<>(200, "Success", responseDTO));
 		}
 		return ResponseEntity.status(HttpStatus.NOT_FOUND)
 				.body(new ApiResponse<>(404, "PeopleDetails not found with Name: " + firstName, null));
-
 	}
-	/**
-	 * get- PeopleDetails with Money Details by- People ID
-	 * @param id
-	 * @return
-	 */
-    @GetMapping("/peopleDetailsWithMoney/{id}")
-    public ResponseEntity<ApiResponse<PeopleDetails>> getPeopleDetailsWithMoney(@PathVariable Long id) {
-        Optional<PeopleDetails> pDetails = peopleService.getPeopleDetailsWithMoney(id);
 
-        if (pDetails.isPresent()) {
-            return ResponseEntity.ok(new ApiResponse<>(200, "Success", pDetails.get()));
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new ApiResponse<>(404, "PeopleDetails not found with ID: " + id, null));
-        }
-    }
 	/**
 	 * get- All Money Details
+	 * 
 	 * @param id
 	 * @return
 	 */
-    @GetMapping("/moneyDetails")
-    public List<MoneyDetailsDTO> getMoneyDetails() {
-    	List<MoneyDetails> moneyDetails = moneyDetailsService.getMoneyDetails();
-	    return moneyDetails.stream().map(MoneyDetailsDTO::new).toList();
-    }
-
-	@PutMapping("peopleDetails/{id}")
-	public ResponseEntity<ApiResponse<PeopleDetails>> updatePeopleAndMoneyDetails(@PathVariable Long id,
-			@RequestBody PeopleAndMoneyDetailsDTO dto) {
-		Optional<PeopleDetails> pDetailsOptional = peopleService.getPeopleDetailsById(id);
-
-		if (pDetailsOptional.isPresent()) {
-			PeopleDetails existingPeopleDetails = pDetailsOptional.get();
-			existingPeopleDetails.setFirstName(dto.getPeopleDetails().getFirstName());
-			existingPeopleDetails.setLastName(dto.getPeopleDetails().getLastName());
-			existingPeopleDetails.setVillage(dto.getPeopleDetails().getVillage());
-			existingPeopleDetails.setDistrict(dto.getPeopleDetails().getDistrict());
-			existingPeopleDetails.setZipCode(dto.getPeopleDetails().getZipCode());
-
-			PeopleDetails updatedPeople = peopleService.savePeopleDetails(existingPeopleDetails);
-
-			if (dto.getMoneyDetails() != null && !dto.getMoneyDetails().isEmpty()) {
-				for (MoneyDetails moneyDetails : dto.getMoneyDetails()) {
-					moneyDetails.setPeopleDetails(updatedPeople);
-					moneyDetailsService.saveMoneyDetails(moneyDetails);
-				}
-			}
-
-			ApiResponse<PeopleDetails> response = new ApiResponse<>(200,
-					"People and Money Details updated successfully", updatedPeople);
-			return ResponseEntity.ok(response);
-		}
-
-		return ResponseEntity.status(HttpStatus.NOT_FOUND)
-				.body(new ApiResponse<>(404, "PeopleDetails not found with ID: " + id, null));
+	@GetMapping("/moneyDetails")
+	public List<MoneyDetailsDTO> getMoneyDetails() {
+		List<MoneyDetails> moneyDetails = moneyService.getMoneyDetails();
+		return moneyDetails.stream().map(MoneyDetailsDTO::new).toList();
 	}
 
 	@DeleteMapping("peopleDetails/{id}")

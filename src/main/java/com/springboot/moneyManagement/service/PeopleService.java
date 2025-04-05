@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.springboot.moneyManagement.dto.PeopleAndMoneyDetailsDTO;
 import com.springboot.moneyManagement.entity.MoneyDetails;
 import com.springboot.moneyManagement.entity.PeopleDetails;
 import com.springboot.moneyManagement.repository.PeopleRepository;
@@ -17,19 +18,19 @@ public class PeopleService {
 	private final PeopleRepository peopleRepository;
 
 	@Autowired
-	private final MoneyDetailsService moneyDetailsService;
+	private final MoneyService moneyService;
 
 	@Autowired
-	public PeopleService(PeopleRepository peopleRepository, MoneyDetailsService moneyDetailsService) {
+	public PeopleService(PeopleRepository peopleRepository, MoneyService moneyService) {
 		this.peopleRepository = peopleRepository;
-		this.moneyDetailsService = moneyDetailsService;
+		this.moneyService = moneyService;
 	}
 
 	public PeopleDetails savePeopleDetails(PeopleDetails peopleDetails) {
 		if (peopleDetails.getMoneyDetails() != null) {
 			for (MoneyDetails moneyDetails : peopleDetails.getMoneyDetails()) {
 				moneyDetails.setPeopleDetails(peopleDetails);
-				moneyDetailsService.saveMoneyDetails(moneyDetails);
+				moneyService.saveMoneyDetails(moneyDetails);
 			}
 		}
 		return peopleRepository.save(peopleDetails);
@@ -47,6 +48,26 @@ public class PeopleService {
 		return peopleRepository.findByFirstName(firstName);
 	}
 
+	/**
+	 * Check people details is already exists
+	 * @param dto
+	 * @return
+	 */
+	public Optional<PeopleDetails> checkPeopleAlreadyExists(PeopleAndMoneyDetailsDTO dto) {
+
+		Optional<PeopleDetails> existingPeople = peopleRepository
+				.findByFirstNameAndLastNameAndVillageAndDistrictAndZipCode(dto.getPeopleDetails().getFirstName(),
+						dto.getPeopleDetails().getLastName(), dto.getPeopleDetails().getVillage(),
+						dto.getPeopleDetails().getDistrict(), dto.getPeopleDetails().getZipCode());
+		return existingPeople;
+	}
+
+	/**
+	 * update people details
+	 * @param id
+	 * @param updatedDetails
+	 * @return
+	 */
 	public PeopleDetails updatePeopleDetails(Long id, PeopleDetails updatedDetails) {
 
 		Optional<PeopleDetails> pDetails = peopleRepository.findById(id);
@@ -61,7 +82,7 @@ public class PeopleService {
 			if (updatedDetails.getMoneyDetails() != null) {
 				for (MoneyDetails moneyDetails : updatedDetails.getMoneyDetails()) {
 					moneyDetails.setPeopleDetails(peopleDetails);
-					moneyDetailsService.updateMoneyDetails(moneyDetails.getId(), moneyDetails);
+					moneyService.updateMoneyDetails(moneyDetails.getId(), moneyDetails);
 				}
 			}
 			return peopleRepository.save(peopleDetails);
@@ -74,10 +95,10 @@ public class PeopleService {
 		Optional<PeopleDetails> pDetails = peopleRepository.findById(id);
 		if (pDetails.isPresent()) {
 			PeopleDetails peopleDetails = pDetails.get();
-			
+
 			if (peopleDetails.getMoneyDetails() != null) {
 				for (MoneyDetails moneyDetails : peopleDetails.getMoneyDetails()) {
-					moneyDetailsService.deleteMoneyDetails(moneyDetails.getId());
+					moneyService.deleteMoneyDetails(moneyDetails.getId());
 				}
 			}
 			peopleRepository.deleteById(id);
@@ -85,17 +106,7 @@ public class PeopleService {
 			throw new RuntimeException("People Details Not found for deletion");
 		}
 	}
+
 	
-    public Optional<PeopleDetails> getPeopleDetailsWithMoney(Long id) {
-        Optional<PeopleDetails> peopleDetails = peopleRepository.findById(id);
-        if (peopleDetails.isPresent()) {
-           
-            List<MoneyDetails> moneyDetails = moneyDetailsService.getAllMoneyDetailsByPeopleId(id);
-            peopleDetails.get().setMoneyDetails(moneyDetails);
-        }
-        return peopleDetails;
-    }
-    
-    
 
 }

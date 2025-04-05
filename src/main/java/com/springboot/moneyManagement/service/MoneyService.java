@@ -10,13 +10,13 @@ import com.springboot.moneyManagement.entity.MoneyDetails;
 import com.springboot.moneyManagement.repository.MoneyRepository;
 
 @Service
-public class MoneyDetailsService {
+public class MoneyService {
 
 	@Autowired
 	private final MoneyRepository moneyRepository;
 
 	@Autowired
-	public MoneyDetailsService(MoneyRepository moneyRepository) {
+	public MoneyService(MoneyRepository moneyRepository) {
 		this.moneyRepository = moneyRepository;
 	}
 
@@ -36,6 +36,12 @@ public class MoneyDetailsService {
 		return moneyRepository.findAll();
 	}
 
+	/**
+	 * Update money details
+	 * @param id
+	 * @param updatedMoneyDetails
+	 * @return
+	 */
 	public MoneyDetails updateMoneyDetails(Long id, MoneyDetails updatedMoneyDetails) {
 		Optional<MoneyDetails> existingMoneyDetails = moneyRepository.findById(id);
 		if (existingMoneyDetails.isPresent()) {
