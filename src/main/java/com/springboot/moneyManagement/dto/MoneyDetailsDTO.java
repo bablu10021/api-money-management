@@ -11,10 +11,10 @@ public class MoneyDetailsDTO {
 	private double amount;
 	private double percentage;
 	
-	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy")
 	private Date startDate;
 	
-	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy")
 	private Date endDate;
 
 	public MoneyDetailsDTO(MoneyDetails moneyDetails) {

@@ -6,7 +6,6 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.springboot.moneyManagement.dto.PeopleAndMoneyDetailsDTO;
 import com.springboot.moneyManagement.entity.MoneyDetails;
 import com.springboot.moneyManagement.entity.PeopleDetails;
 import com.springboot.moneyManagement.repository.PeopleRepository;
@@ -46,20 +45,6 @@ public class PeopleService {
 
 	public Optional<PeopleDetails> getPeopleDetailsByfirstName(String firstName) {
 		return peopleRepository.findByFirstName(firstName);
-	}
-
-	/**
-	 * Check people details is already exists
-	 * @param dto
-	 * @return
-	 */
-	public Optional<PeopleDetails> checkPeopleAlreadyExists(PeopleAndMoneyDetailsDTO dto) {
-
-		Optional<PeopleDetails> existingPeople = peopleRepository
-				.findByFirstNameAndLastNameAndVillageAndDistrictAndZipCode(dto.getPeopleDetails().getFirstName(),
-						dto.getPeopleDetails().getLastName(), dto.getPeopleDetails().getVillage(),
-						dto.getPeopleDetails().getDistrict(), dto.getPeopleDetails().getZipCode());
-		return existingPeople;
 	}
 
 	/**

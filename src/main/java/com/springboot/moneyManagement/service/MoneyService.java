@@ -9,6 +9,8 @@ import org.springframework.stereotype.Service;
 import com.springboot.moneyManagement.entity.MoneyDetails;
 import com.springboot.moneyManagement.repository.MoneyRepository;
 
+import jakarta.transaction.Transactional;
+
 @Service
 public class MoneyService {
 
@@ -20,6 +22,7 @@ public class MoneyService {
 		this.moneyRepository = moneyRepository;
 	}
 
+	@Transactional
 	public MoneyDetails saveMoneyDetails(MoneyDetails moneyDetails) {
 		return moneyRepository.save(moneyDetails);
 	}

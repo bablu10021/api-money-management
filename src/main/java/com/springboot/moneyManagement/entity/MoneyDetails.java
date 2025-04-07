@@ -34,11 +34,11 @@ public class MoneyDetails {
 	private double percentage;
 
 	@Column(name = "start_Date", nullable = false)
-	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy")
 	private Date startDate;
 
 	@Column(name = "end_Date")
-	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy")
 	private Date endDate;
 
 	public long getId() {
