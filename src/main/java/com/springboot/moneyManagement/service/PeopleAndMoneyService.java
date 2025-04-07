@@ -13,25 +13,33 @@ import com.springboot.moneyManagement.entity.MoneyDetails;
 import com.springboot.moneyManagement.entity.PeopleDetails;
 import com.springboot.moneyManagement.repository.PeopleRepository;
 import com.springboot.moneyManagement.response.ApiResponse;
+import com.springboot.moneyManagement.validation.MoneyDetailsValidation;
+
+import jakarta.transaction.Transactional;
 
 @Service
 public class PeopleAndMoneyService {
 
 	@Autowired
 	private final MoneyService moneyService;
-	
+
 	@Autowired
 	private final PeopleService peopleService;
-
+	
 	@Autowired
 	private final PeopleRepository peopleRepository;
 
 	@Autowired
+	private final MoneyDetailsValidation moneyDetailsValidation;
+
+	@Autowired
 	public PeopleAndMoneyService(PeopleRepository peopleRepository, MoneyService moneyService,
-			PeopleService peopleService) {
+			PeopleService peopleService, MoneyDetailsValidation moneyDetailsValidation,
+			MoneyDetailsValidation peopleDetailsValidation) {
 		this.moneyService = moneyService;
 		this.peopleService = peopleService;
 		this.peopleRepository = peopleRepository;
+		this.moneyDetailsValidation = moneyDetailsValidation;
 	}
 
 	/**
@@ -41,27 +49,32 @@ public class PeopleAndMoneyService {
 	 * @param dto
 	 * @return
 	 */
+	@Transactional
 	public ResponseEntity<ApiResponse<PeopleDetails>> savePeopleAndMoneyDetails(PeopleAndMoneyDetailsDTO dto) {
-
 		PeopleDetails savedPeople;
-
-		Optional<PeopleDetails> existingPeopleOpt = peopleService.checkPeopleAlreadyExists(dto);
-
+		StringBuilder errorMessages = new StringBuilder();
+		Optional<PeopleDetails> existingPeopleOpt = moneyDetailsValidation.checkPeopleAlreadyExists(dto);
 		if (existingPeopleOpt.isPresent()) {
 			savedPeople = existingPeopleOpt.get();
 		} else {
 			savedPeople = peopleService.savePeopleDetails(dto.getPeopleDetails());
 		}
-
 		if (dto.getMoneyDetails() != null && !dto.getMoneyDetails().isEmpty()) {
-			dto.getMoneyDetails().forEach(moneyDetails -> {
+			for (MoneyDetails moneyDetails : dto.getMoneyDetails()) {
 				moneyDetails.setPeopleDetails(savedPeople);
-				moneyService.saveMoneyDetails(moneyDetails);
-			});
-		}
 
-		ApiResponse<PeopleDetails> response = new ApiResponse<>(200, "People and Money Details saved successfully",
-				savedPeople);
+				StringBuilder validationMsg = moneyDetailsValidation.moneyDetailsIsValid(moneyDetails);
+				if (validationMsg.isEmpty()) {
+					moneyService.saveMoneyDetails(moneyDetails);
+				} else {
+					errorMessages.append(validationMsg).append(" ");
+				}
+			}
+		}
+		if (errorMessages.length() > 0) {
+			throw new RuntimeException("Invalid money details: " + errorMessages.toString());
+		}
+		ApiResponse<PeopleDetails> response = new ApiResponse<>(201, "Saved successfully", savedPeople);
 		return ResponseEntity.status(HttpStatus.CREATED).body(response);
 	}
 
@@ -105,6 +118,7 @@ public class PeopleAndMoneyService {
 
 	/**
 	 * Get People and money details based on people id
+	 * 
 	 * @param id
 	 * @return
 	 */
